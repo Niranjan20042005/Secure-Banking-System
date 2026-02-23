@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Account</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+font-family:Poppins;
+background:linear-gradient(135deg,#020617,#0f172a);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+width:420px;
+padding:30px;
+border-radius:20px;
+background:rgba(0,255,0,0.08);
+border:1px solid #00ff95;
+box-shadow:0 0 30px #00ff9544;
+}
+
+h2{text-align:center;margin-bottom:20px;color:#00ff95}
+
+p{margin:8px 0;font-size:16px}
+
+.card{
+margin-top:20px;
+padding:25px;
+border-radius:18px;
+background:linear-gradient(135deg,#0a2a66,#123e91);
+box-shadow:0 0 25px #00ff9544;
+}
+
+.card h3{margin:0;font-size:18px}
+.accno{font-size:22px;margin:15px 0}
+.name{opacity:.9}
+
+button{
+margin-top:20px;
+padding:12px;
+width:100%;
+border:none;
+border-radius:10px;
+background:#00ff95;
+font-weight:bold;
+cursor:pointer;
+}
+button:hover{background:#00cc77}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>🏦 My Account Details</h2>
+
+<p><b>Name:</b> <span id="name">Loading...</span></p>
+<p><b>Email:</b> <span id="email">Loading...</span></p>
+<p><b>Account:</b> <span id="acc">Loading...</span></p>
+<p><b>IFSC:</b> <span id="ifsc">Loading...</span></p>
+<p><b>Customer ID:</b> <span id="cid">Loading...</span></p>
+<p><b>Type:</b> <span id="type">Loading...</span></p>
+<p><b>Balance:</b> ₹<span id="bal">Loading...</span></p>
+
+<div class="card">
+<h3>🏦 SECURE BANK</h3>
+<div class="accno" id="cardAcc">XXXX</div>
+<div class="name" id="cardName">NAME</div>
+</div>
+
+<button onclick="location='dashboard.html'">⬅ Back Dashboard</button>
+</div>
+
+<script>
+
+let token = localStorage.getItem("token");
+
+if(!token){
+alert("Login first");
+window.location="login.html";
+}
+
+// FETCH ACCOUNT
+fetch("http://localhost:8080/bank/myaccount",{
+method:"GET",
+headers:{
+"Authorization":"Bearer "+token,
+"Content-Type":"application/json"
+}
+})
+.then(res=>{
+if(!res.ok){throw new Error("API error")}
+return res.json();
+})
+.then(d=>{
+
+console.log(d);
+
+// show data
+document.getElementById("name").innerText = d.name;
+document.getElementById("email").innerText = d.email;
+document.getElementById("acc").innerText = d.accountNo;
+document.getElementById("ifsc").innerText = d.ifsc;
+document.getElementById("cid").innerText = d.customerId;
+document.getElementById("type").innerText = d.type;
+document.getElementById("bal").innerText = d.balance;
+
+// card
+document.getElementById("cardAcc").innerText = d.accountNo;
+document.getElementById("cardName").innerText = d.name;
+
+})
+.catch(err=>{
+console.log(err);
+alert("Unable to load account details. Start backend.");
+});
+
+</script>
+
+</body>
+</html>
+

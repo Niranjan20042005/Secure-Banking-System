@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Advanced OTP Verification</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+
+.container{
+    background: rgba(0,0,0,0.75);
+    padding:35px;
+    border-radius:14px;
+    width:360px;
+    text-align:center;
+    box-shadow:0 0 25px rgba(0,0,0,0.6);
+}
+
+.title-box{margin-bottom:20px}
+
+.icon-circle{
+    width:70px;height:70px;
+    background:linear-gradient(135deg,#00c6ff,#0072ff);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    margin:auto;box-shadow:0 0 20px rgba(0,198,255,0.6);
+}
+
+.icon-circle i{font-size:35px;color:white}
+
+input{
+    width:80%;
+    padding:12px;
+    border-radius:6px;
+    border:none;
+    text-align:center;
+    font-size:18px;
+    letter-spacing:5px;
+}
+
+button{
+    padding:12px 25px;
+    border:none;border-radius:6px;
+    background:#00c6ff;color:white;
+    font-size:16px;cursor:pointer;
+}
+
+button:disabled{background:gray}
+
+.timer{margin-top:10px;font-size:14px;color:orange}
+
+#msg{margin-top:15px;font-weight:bold;font-size:16px}
+
+.success-icon{
+    font-size:55px;color:lightgreen;
+    display:none;margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title-box">
+    <div class="icon-circle">
+        <i class="bi bi-patch-check"></i>
+    </div>
+    <h2>OTP Verification</h2>
+    <p>Enter OTP sent to your email</p>
+</div>
+
+<input type="text" id="otp" maxlength="6" placeholder="______"><br><br>
+
+<button id="verifyBtn" onclick="verify()">Verify OTP</button>
+<br><br>
+
+<button id="resendBtn" onclick="resendOTP()" disabled>Resend OTP</button>
+<div class="timer" id="timer">Resend in 30s</div>
+
+<div class="success-icon" id="successIcon">
+<i class="bi bi-patch-check-fill"></i>
+</div>
+
+<p id="msg"></p>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const username = params.get("username");  // get username from login
+
+const msg = document.getElementById("msg");
+const verifyBtn = document.getElementById("verifyBtn");
+const resendBtn = document.getElementById("resendBtn");
+const timerText = document.getElementById("timer");
+const otpInput = document.getElementById("otp");
+const successIcon = document.getElementById("successIcon");
+
+otpInput.focus();
+
+//////////////// TIMER
+let time = 30;
+let timer = setInterval(()=>{
+    time--;
+    timerText.innerHTML = "Resend in "+time+"s";
+
+    if(time<=0){
+        clearInterval(timer);
+        resendBtn.disabled=false;
+        timerText.innerHTML="You can resend OTP";
+    }
+},1000);
+
+//////////////// VERIFY OTP
+function verify(){
+
+let otp = otpInput.value.trim();
+
+if(otp===""){
+ msg.innerText="Enter OTP first";
+ msg.style.color="orange";
+ return;
+}
+
+verifyBtn.innerText="Verifying...";
+verifyBtn.disabled=true;
+
+fetch(`http://localhost:8080/auth/verify?username=${username}&otp=${otp}`,{
+ method:"POST"
+})
+.then(res=>res.json())
+.then(data=>{
+
+ console.log("OTP RESPONSE:",data);
+
+ if(data.message==="Invalid OTP"){
+   msg.innerText="Invalid OTP";
+   msg.style.color="red";
+ }
+
+ else if(data.token){
+
+   msg.innerText="Login successful!";
+   msg.style.color="lightgreen";
+   successIcon.style.display="block";
+
+   // ⭐ SAVE BOTH
+   localStorage.setItem("token", data.token);
+   localStorage.setItem("username", username);
+
+   console.log("Saved username:",username);
+   console.log("Saved token:",data.token);
+
+   setTimeout(()=>{
+     window.location.href="dashboard.html";
+   },1200);
+ }
+
+ else{
+   msg.innerText="OTP verification failed";
+   msg.style.color="red";
+ }
+
+})
+.catch(()=>{
+ msg.innerText="Server error";
+ msg.style.color="red";
+})
+.finally(()=>{
+ verifyBtn.innerText="Verify OTP";
+ verifyBtn.disabled=false;
+});
+}
+
+//////////////// RESEND OTP
+function resendOTP(){
+
+resendBtn.innerText="Sending...";
+resendBtn.disabled=true;
+
+fetch(`http://localhost:8080/auth/resend?username=${username}`,{
+ method:"POST"
+})
+.then(res=>res.json())
+.then(data=>{
+ msg.innerText=data.message;
+ msg.style.color="cyan";
+
+ time=30;
+ timerText.innerHTML="Resend in 30s";
+
+ timer = setInterval(()=>{
+    time--;
+    timerText.innerHTML="Resend in "+time+"s";
+
+    if(time<=0){
+        clearInterval(timer);
+        resendBtn.disabled=false;
+        timerText.innerHTML="You can resend OTP";
+    }
+ },1000);
+})
+.catch(()=>{
+ msg.innerText="Server error";
+ msg.style.color="red";
+});
+}
+</script>
+
+</body>
+</html>
+
+
+

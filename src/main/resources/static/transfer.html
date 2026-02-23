@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Money Transfer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#020024,#000);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* CARD */
+.card{
+width:380px;
+background:#18235c;
+padding:35px 30px;
+border-radius:20px;
+box-shadow:0 0 45px cyan;
+color:white;
+position:relative;
+}
+
+/* BACK BUTTON */
+.back-btn{
+position:absolute;
+top:15px;
+left:15px;
+border:none;
+background:none;
+color:#00eaff;
+font-size:24px;
+cursor:pointer;
+}
+
+/* TITLE */
+.title{
+text-align:center;
+font-size:24px;
+font-weight:600;
+margin-bottom:25px;
+}
+
+/* INPUT GROUP */
+.group{
+width:100%;
+margin-bottom:15px;
+position:relative;
+}
+
+.group i{
+position:absolute;
+top:50%;
+left:12px;
+transform:translateY(-50%);
+color:#00eaff;
+font-size:18px;
+}
+
+.group input{
+width:100%;
+padding:14px 14px 14px 40px;
+border:none;
+outline:none;
+border-radius:12px;
+background:#e6e6e6;
+font-size:15px;
+}
+
+/* BUTTON */
+button.main-btn{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:#11d8d8;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
+margin-top:10px;
+transition:.3s;
+}
+
+button.main-btn:hover{
+background:#00f7ff;
+box-shadow:0 0 15px cyan;
+}
+
+/* OTP BOX */
+#otpbox{
+display:none;
+margin-top:10px;
+}
+
+/* MESSAGE */
+.msg{
+margin-top:18px;
+padding:13px;
+border-radius:12px;
+font-weight:600;
+display:none;
+text-align:center;
+}
+
+.success{
+background:#114d2f;
+color:#00ffae;
+}
+
+.error{
+background:#5a1010;
+color:#ff4d4d;
+}
+
+.loading{
+background:#1c2b5c;
+color:#00eaff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<!-- BACK BUTTON -->
+<button class="back-btn" onclick="goBack()">
+<i class="bi bi-arrow-left-circle"></i>
+</button>
+
+<div class="title">
+<i class="bi bi-send-check"></i> Money Transfer
+</div>
+
+<div class="group">
+<i class="bi bi-person"></i>
+<input id="sender" placeholder="Sender Account">
+</div>
+
+<div class="group">
+<i class="bi bi-person-check"></i>
+<input id="receiver" placeholder="Receiver Account">
+</div>
+
+<div class="group">
+<i class="bi bi-currency-rupee"></i>
+<input id="amount" placeholder="Amount">
+</div>
+
+<button class="main-btn" onclick="sendOtp()">
+<i class="bi bi-shield-lock"></i> Send OTP
+</button>
+
+<!-- OTP -->
+<div id="otpbox">
+<div class="group">
+<i class="bi bi-key"></i>
+<input id="otp" placeholder="Enter OTP">
+</div>
+
+<button class="main-btn" onclick="verifyOtp()">
+<i class="bi bi-check-circle"></i> Verify & Transfer
+</button>
+</div>
+
+<div id="msg" class="msg"></div>
+
+</div>
+
+<script>
+
+function goBack(){
+window.location="dashboard.html";
+}
+
+function showMsg(text,type){
+let m=document.getElementById("msg");
+m.style.display="block";
+
+if(type==="success"){
+m.className="msg success";
+m.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${text}`;
+}
+else if(type==="error"){
+m.className="msg error";
+m.innerHTML=`<i class="bi bi-x-circle-fill"></i> ${text}`;
+}
+else{
+m.className="msg loading";
+m.innerHTML=`<i class="bi bi-arrow-repeat"></i> ${text}`;
+}
+}
+
+/* SEND OTP */
+function sendOtp(){
+
+let s=sender.value;
+let r=receiver.value;
+let a=amount.value;
+
+if(s===""||r===""||a===""){
+showMsg("Enter all details","error");
+return;
+}
+
+showMsg("Sending OTP...","loading");
+
+fetch(`http://localhost:8080/bank/sendTransferOtp/${s}/${r}/${a}`)
+.then(res=>res.json())
+.then(d=>{
+
+if(d.msg.toLowerCase().includes("otp")){
+showMsg("OTP sent successfully to Gmail","success");
+document.getElementById("otpbox").style.display="block";
+}else{
+showMsg(d.msg,"error");
+}
+
+})
+.catch(()=>{
+showMsg("Server error","error");
+});
+}
+
+/* VERIFY OTP */
+function verifyOtp(){
+
+let data={
+sender:sender.value,
+receiver:receiver.value,
+amount:amount.value,
+otp:otp.value
+};
+
+showMsg("Processing transfer...","loading");
+
+fetch("http://localhost:8080/bank/verifyTransferOtp",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+})
+.then(res=>res.json())
+.then(d=>{
+
+if(d.msg.toLowerCase().includes("success")){
+showMsg(d.msg,"success");
+
+setTimeout(()=>{
+window.location="dashboard.html";
+},2000);
+
+}else{
+showMsg(d.msg,"error");
+}
+
+})
+.catch(()=>{
+showMsg("Server error","error");
+});
+}
+
+</script>
+
+</body>
+</html>
+
+

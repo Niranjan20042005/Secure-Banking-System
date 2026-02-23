@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    height:100vh;
+    background:linear-gradient(135deg,#020617,#0f172a);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    width:360px;
+    padding:35px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    box-shadow:0 0 30px rgba(0,255,255,0.35);
+    text-align:center;
+    border:1px solid rgba(0,255,255,0.3);
+}
+
+h2{color:white;margin-bottom:20px;}
+
+.input-box{
+    position:relative;
+    margin:12px 0;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+    background:#e5e7eb;
+    font-size:14px;
+}
+
+input:focus{
+    border:2px solid cyan;
+    background:white;
+}
+
+.toggle-pass{
+    position:absolute;
+    right:10px;
+    top:12px;
+    cursor:pointer;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    margin-top:15px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.login-btn{
+    background:cyan;
+    color:black;
+}
+
+.login-btn:hover{
+    background:#00e5ff;
+    transform:scale(1.03);
+}
+
+.secondary-btn{
+    background:#111827;
+    color:white;
+    border:1px solid cyan;
+}
+
+.secondary-btn:hover{
+    background:cyan;
+    color:black;
+}
+
+#msg{
+    margin-top:15px;
+    font-weight:600;
+    font-size:15px;
+    text-align:center;
+}
+
+.success{color:lime;}
+.error{color:red;}
+.loading{opacity:0.7;pointer-events:none;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🔐 Secure Login</h2>
+
+    <!-- USERNAME -->
+    <div class="input-box">
+        <input type="text" id="username" placeholder="Enter Username">
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="input-box">
+        <input type="password" id="password" placeholder="Enter Password">
+        <span class="toggle-pass" onclick="togglePass()">👁</span>
+    </div>
+
+    <button class="login-btn" id="loginBtn" onclick="loginUser()">Login</button>
+
+    <p id="msg"></p>
+
+    <br>
+    <button class="secondary-btn" onclick="goHome()">⬅ Back to Home</button>
+</div>
+
+<script>
+
+function togglePass(){
+    let p=document.getElementById("password");
+    p.type = p.type==="password" ? "text":"password";
+}
+
+function loginUser(){
+
+    let btn=document.getElementById("loginBtn");
+    let username=document.getElementById("username").value.trim();
+    let password=document.getElementById("password").value.trim();
+    let msg=document.getElementById("msg");
+
+    msg.innerText="";
+    msg.className="";
+
+    if(username==="" || password===""){
+        msg.innerText="⚠ Enter username & password";
+        msg.className="error";
+        return;
+    }
+
+    btn.innerText="Checking...";
+    btn.classList.add("loading");
+
+    fetch("http://localhost:8080/auth/login",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ username,password })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+    	
+    	
+        btn.innerText="Login";
+        btn.classList.remove("loading");
+
+        /* OTP LOGIN */
+        if(data.message && data.message.toLowerCase().includes("otp")){
+            msg.innerText="📩 OTP sent. Redirecting...";
+            msg.className="success";
+
+            setTimeout(()=>{
+                window.location.href="otp.html?username="+encodeURIComponent(username);
+            },1500);
+            return;
+        }
+
+        /* DIRECT LOGIN SUCCESS */
+        if(data.token){
+            localStorage.setItem("token",data.token);
+            msg.innerText="✅ Login successful!";
+            msg.className="success";
+
+            setTimeout(()=>{
+                window.location.href="dashboard.html";
+            },1200);
+            return;
+        }
+
+        /* ERROR */
+        msg.innerText=data.message || "Login failed";
+        msg.className="error";
+
+    })
+    .catch(err=>{
+        btn.innerText="Login";
+        btn.classList.remove("loading");
+        msg.innerText="❌ Server error";
+        msg.className="error";
+        console.log(err);
+    });
+}
+
+function goHome(){
+    window.location="index.html";
+}
+</script>
+
+</body>
+</html>
+

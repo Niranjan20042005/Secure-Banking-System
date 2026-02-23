@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Scan QR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+
+body{
+height:100vh;
+background:#030712;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+color:white;
+overflow:hidden;
+}
+
+/* BACK */
+.back{
+position:absolute;
+top:25px;
+left:25px;
+font-size:28px;
+color:#22d3ee;
+cursor:pointer;
+}
+
+/* TITLE */
+.title{
+font-size:36px;
+margin-bottom:25px;
+font-weight:600;
+color:#38bdf8;
+}
+
+/* CARD */
+.card{
+background:#020617;
+padding:30px 25px;
+border-radius:30px;
+box-shadow:0 0 60px rgba(34,211,238,0.35);
+display:flex;
+flex-direction:column;
+align-items:center;
+border:2px solid #22d3ee;
+}
+
+/* CAMERA */
+#reader{
+width:300px;
+height:300px;
+border-radius:20px;
+overflow:hidden;
+border:3px solid #22d3ee;
+position:relative;
+}
+
+/* SCAN LINE */
+.scan-line{
+position:absolute;
+width:100%;
+height:3px;
+background:#22d3ee;
+top:0;
+animation:scan 2s linear infinite;
+box-shadow:0 0 10px #22d3ee;
+}
+@keyframes scan{
+0%{top:0}
+100%{top:100%}
+}
+
+/* MESSAGE */
+.msg{
+margin-top:18px;
+font-size:16px;
+min-height:28px;
+text-align:center;
+}
+
+.success{color:#22c55e;}
+.error{color:#ef4444;}
+.info{color:#9ca3af;}
+.verify{color:#facc15;}
+
+/* UPLOAD */
+.upload{
+margin-top:18px;
+}
+
+.upload label{
+background:linear-gradient(90deg,#22d3ee,#3b82f6);
+padding:12px 35px;
+border-radius:30px;
+color:black;
+font-weight:600;
+cursor:pointer;
+font-size:16px;
+box-shadow:0 0 20px rgba(34,211,238,0.6);
+}
+
+input[type=file]{display:none;}
+
+/* SUCCESS SCREEN */
+.success-screen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#020617;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:999;
+opacity:0;
+pointer-events:none;
+transition:0.4s;
+}
+
+.success-screen.show{
+opacity:1;
+pointer-events:auto;
+}
+
+.tick{
+font-size:90px;
+color:#22c55e;
+animation:pop 0.6s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(0)}
+100%{transform:scale(1)}
+}
+
+.success-text{
+margin-top:15px;
+font-size:28px;
+color:#22c55e;
+font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SUCCESS SCREEN -->
+<div id="successScreen" class="success-screen">
+<i class="bi bi-check-circle-fill tick"></i>
+<div class="success-text">QR Code Verified</div>
+</div>
+
+<!-- BACK -->
+<i class="bi bi-arrow-left back" onclick="goBack()"></i>
+
+<div class="title">Scan QR</div>
+
+<div class="card">
+<div id="reader">
+<div class="scan-line"></div>
+</div>
+
+<div id="msg" class="msg info">
+<i class="bi bi-camera"></i> Checking camera permission...
+</div>
+
+<div class="upload">
+<label>
+<i class="bi bi-image"></i> Upload QR
+<input type="file" id="qrfile" accept="image/*">
+</label>
+</div>
+</div>
+
+<script>
+let scanner;
+
+function showMsg(text,type){
+let msg=document.getElementById("msg");
+msg.className="msg "+type;
+
+let icon="";
+if(type==="success") icon="bi-check-circle-fill";
+else if(type==="error") icon="bi-x-circle-fill";
+else if(type==="verify") icon="bi-shield-check";
+else icon="bi-info-circle-fill";
+
+msg.innerHTML='<i class="bi '+icon+'"></i> '+text;
+}
+
+function goBack(){
+window.location.href="dashboard.html";
+}
+
+// CAMERA PERMISSION
+async function checkPermission(){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({video:true});
+stream.getTracks().forEach(track=>track.stop());
+startScanner();
+}catch{
+showMsg("Allow camera permission from browser","error");
+}
+}
+
+// START CAMERA
+function startScanner(){
+
+scanner=new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(devices=>{
+if(devices.length>0){
+
+showMsg("Camera started. Scan QR","success");
+
+scanner.start(devices[0].id,
+{fps:10,qrbox:250},
+(decodedText)=>{
+
+navigator.vibrate?.(200);
+showMsg("QR detected ✓ Verifying...","verify");
+
+setTimeout(()=>{
+showVerified(decodedText);
+},1200);
+
+});
+
+}else{
+showMsg("No camera found","error");
+}
+});
+
+}
+
+checkPermission();
+
+// VERIFIED SCREEN
+function showVerified(account){
+document.getElementById("successScreen").classList.add("show");
+
+setTimeout(()=>{
+window.location.href="pay.html?account="+account;
+},2000);
+}
+
+
+// UPLOAD QR IMAGE
+document.getElementById("qrfile").addEventListener("change",function(e){
+
+let file=e.target.files[0];
+if(!file) return;
+
+showMsg("Scanning QR image...","info");
+
+let html5QrCode=new Html5Qrcode("reader");
+
+html5QrCode.scanFile(file,true)
+.then(decodedText=>{
+showMsg("QR detected ✓ Verifying...","verify");
+
+setTimeout(()=>{
+showVerified(decodedText);
+},1200);
+})
+.catch(()=>{
+showMsg("No QR found in image","error");
+});
+
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Account</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
+body{
+background:linear-gradient(135deg,#020617,#0f172a,#020617);
+color:white;min-height:100vh;
+display:flex;justify-content:center;align-items:center;
+}
+
+/* BOX */
+.container{
+width:430px;padding:35px;border-radius:20px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(18px);
+border:1px solid cyan;
+box-shadow:0 0 25px rgba(0,255,255,0.4);
+}
+
+h2{text-align:center;margin-bottom:25px;color:cyan}
+
+/* INPUT */
+input{
+width:100%;padding:12px;margin:10px 0;border:none;
+border-radius:10px;outline:none;
+background:rgba(255,255,255,0.1);
+color:white;
+}
+
+/* BUTTON */
+button{
+width:100%;padding:12px;margin-top:12px;
+border:none;border-radius:12px;
+background:linear-gradient(45deg,cyan,#00e5ff);
+font-weight:600;cursor:pointer;
+box-shadow:0 0 12px cyan;
+}
+button:hover{transform:scale(1.05)}
+
+.account-box{
+background:rgba(0,255,0,0.1);
+padding:20px;border-radius:15px;
+border:1px solid #00ff95;
+margin-top:15px;
+}
+
+.back{
+margin-top:15px;background:#111;color:white;
+}
+
+.choice-btn{
+background:linear-gradient(45deg,#00ff95,#00e5ff);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🏦 Bank Account</h2>
+
+<!-- STEP 1 CHOICE -->
+<div id="choiceSection">
+<button class="choice-btn" onclick="checkAndCreate()">🆕 Create New Account</button>
+<button class="choice-btn" onclick="checkExisting()">💼 My Account</button>
+</div>
+
+<!-- CREATE ACCOUNT -->
+<div id="createSection" style="display:none">
+<h3 style="color:cyan;margin-bottom:10px">Create New Account</h3>
+<input type="number" id="deposit" placeholder="Enter Initial Deposit ₹">
+<button onclick="createAccount()">Create Account</button>
+</div>
+
+<!-- ACCOUNT DETAILS -->
+<div id="accountSection" style="display:none" class="account-box">
+<h3>✅ My Account</h3>
+<p><b>Account No:</b> <span id="accNo"></span></p>
+<p><b>Balance:</b> ₹<span id="bal"></span></p>
+</div>
+
+<button class="back" onclick="location='dashboard.html'">⬅ Back</button>
+
+</div>
+
+<script>
+let token = localStorage.getItem("token");
+
+// if not logged in
+if(!token){
+    alert("Login again");
+    location="login.html";
+}
+
+// 🆕 CREATE NEW ACCOUNT BUTTON
+function checkAndCreate(){
+    fetch("http://localhost:8080/bank/balance",{
+        headers:{ Authorization:"Bearer "+token }
+    })
+    .then(res=>res.json())
+    .then(d=>{
+        // if account already exists
+        if(d && d.accountNumber){
+            alert("⚠ Account already exists! Opening your account...");
+            window.location.href = "accountlogin.html"; // go to my account page
+        }else{
+            // if no account → create new
+            window.location.href = "bankaccount.html";
+        }
+    })
+    .catch(()=>{
+        // if error assume no account
+        window.location.href = "bankaccount.html";
+    });
+}
+
+// 💼 MY ACCOUNT BUTTON
+function checkExisting(){
+    fetch("http://localhost:8080/bank/balance",{
+        headers:{ Authorization:"Bearer "+token }
+    })
+    .then(res=>res.json())
+    .then(d=>{
+        if(d && d.accountNumber){
+            // account exists → open account login/details page
+            window.location.href = "accountlogin.html";
+        }else{
+            alert("❌ No account found. Please create account first.");
+        }
+    })
+    .catch(()=>{
+    	window.location.href = "accountlogin.html";
+    });
+}
+</script>
+
+
+</body>
+</html>
+

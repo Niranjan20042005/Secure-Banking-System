@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Signup</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    height:100vh;
+    background:linear-gradient(135deg,#0f172a,#020617);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    width:360px;
+    padding:35px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    box-shadow:0 0 30px rgba(0,255,255,0.3);
+    text-align:center;
+    border:1px solid rgba(0,255,255,0.3);
+}
+
+h2{
+    color:white;
+    margin-bottom:20px;
+}
+
+.input-box{
+    position:relative;
+    margin:12px 0;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+    background:#e5e7eb;
+}
+
+input:focus{
+    border:2px solid cyan;
+    background:white;
+}
+
+.toggle-pass{
+    position:absolute;
+    right:10px;
+    top:12px;
+    cursor:pointer;
+    font-size:13px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    margin-top:15px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.register-btn{
+    background:cyan;
+    color:black;
+}
+
+.register-btn:hover{
+    background:#00e5ff;
+    transform:scale(1.03);
+}
+
+.secondary-btn{
+    background:#111827;
+    color:white;
+    border:1px solid cyan;
+}
+
+.secondary-btn:hover{
+    background:cyan;
+    color:black;
+}
+
+hr{
+    margin:20px 0;
+    border:0.5px solid #555;
+}
+
+#msg{
+    margin-top:10px;
+    font-weight:600;
+    font-size:14px;
+}
+
+.success{color:lime;}
+.error{color:red;}
+.loading{opacity:0.7;pointer-events:none;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🔐 Create Account</h2>
+
+    <!-- USERNAME -->
+    <div class="input-box">
+        <input type="text" id="username" placeholder="Enter Username">
+    </div>
+
+    <!-- EMAIL -->
+    <div class="input-box">
+        <input type="email" id="email" placeholder="Enter Email">
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="input-box">
+        <input type="password" id="password" placeholder="Enter Password">
+        <span class="toggle-pass" onclick="togglePass()">👁</span>
+    </div>
+
+    <button class="register-btn" id="regBtn" onclick="registerUser()">Register</button>
+
+    <p id="msg"></p>
+
+    <hr>
+    <p style="color:white">Already have account?</p>
+
+    <button class="secondary-btn" onclick="goLogin()">Login Here</button>
+    <br><br>
+    <button class="secondary-btn" onclick="goHome()">⬅ Back to Home</button>
+</div>
+
+<script>
+function togglePass(){
+    let pass=document.getElementById("password");
+    pass.type = pass.type==="password" ? "text":"password";
+}
+
+function registerUser(){
+
+    let btn=document.getElementById("regBtn");
+    let username=document.getElementById("username").value.trim();
+    let email=document.getElementById("email").value.trim();
+    let password=document.getElementById("password").value.trim();
+    let msg=document.getElementById("msg");
+
+    msg.innerText="";
+
+    if(username==="" || email==="" || password===""){
+        msg.innerText="⚠ All fields required";
+        msg.className="error";
+        return;
+    }
+
+    if(password.length<6){
+        msg.innerText="⚠ Password must be 6+ characters";
+        msg.className="error";
+        return;
+    }
+
+    btn.innerText="Registering...";
+    btn.classList.add("loading");
+
+    fetch("http://localhost:8080/auth/signup",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            username:username,
+            email:email,
+            password:password
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+
+        btn.innerText="Register";
+        btn.classList.remove("loading");
+
+        if(data.message && data.message.includes("Signup successful")){
+            msg.innerText="✅ Signup successful!";
+            msg.className="success";
+
+            document.getElementById("username").value="";
+            document.getElementById("email").value="";
+            document.getElementById("password").value="";
+
+            setTimeout(()=>{
+                window.location="login.html";
+            },1500);
+
+        }else{
+            msg.innerText=data.message || "Signup failed";
+            msg.className="error";
+        }
+
+    })
+    .catch(err=>{
+        btn.innerText="Register";
+        btn.classList.remove("loading");
+        msg.innerText="❌ Server error";
+        msg.className="error";
+        console.log(err);
+    });
+}
+
+function goLogin(){
+    window.location="login.html";
+}
+
+function goHome(){
+    window.location="index.html";
+}
+</script>
+
+</body>
+</html>
+

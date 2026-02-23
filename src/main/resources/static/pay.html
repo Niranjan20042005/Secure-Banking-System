@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Secure Pay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;}
+
+body{
+font-family:'Poppins',Arial;
+background:linear-gradient(135deg,#020617,#000814,#020617);
+margin:0;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:white;
+}
+
+/* card */
+.box{
+width:380px;
+padding:35px 30px;
+background:#0b132b;
+border-radius:22px;
+box-shadow:0 0 70px rgba(0,170,255,0.25);
+text-align:center;
+animation:fade 0.7s ease;
+}
+
+@keyframes fade{
+from{opacity:0; transform:translateY(20px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+h2{
+margin-bottom:25px;
+color:#00c3ff;
+}
+
+/* input */
+.inputBox{
+position:relative;
+width:100%;
+margin:16px 0;
+}
+
+.inputBox i{
+position:absolute;
+left:14px;
+top:50%;
+transform:translateY(-50%);
+color:#00c3ff;
+font-size:18px;
+}
+
+input{
+width:100%;
+padding:14px 14px 14px 45px;
+border-radius:12px;
+border:1px solid rgba(0,195,255,0.35);
+background:#020617;
+color:white;
+font-size:15px;
+outline:none;
+transition:0.3s;
+}
+
+input:focus{
+border:1px solid #00c3ff;
+box-shadow:0 0 15px rgba(0,195,255,0.7);
+}
+
+/* buttons */
+button{
+width:100%;
+padding:13px;
+margin-top:12px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
+background:linear-gradient(45deg,#00c3ff,#00f2fe);
+color:#001;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.04);
+box-shadow:0 0 18px #00c3ff;
+}
+
+.backBtn{
+background:#2f2f2f;
+color:white;
+}
+
+.backBtn:hover{
+background:#444;
+}
+
+/* message */
+#msg{
+margin-top:18px;
+padding:14px;
+border-radius:12px;
+font-weight:bold;
+display:none;
+}
+
+.success{background:#052e2b;color:#00ffc3;}
+.error{background:#3a0d0d;color:#ff8080;}
+.info{background:#06263d;color:#66cfff;}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2><i class="bi bi-send-fill"></i> Secure Payment</h2>
+
+<!-- USER ACCOUNT NUMBER -->
+<div class="inputBox">
+<i class="bi bi-person-badge"></i>
+<input type="text" id="userAccount" placeholder="Enter Your Account Number">
+</div>
+
+<!-- RECEIVER ACCOUNT -->
+<div class="inputBox">
+<i class="bi bi-credit-card"></i>
+<input type="text" id="receiverAccount" readonly>
+</div>
+
+<!-- AMOUNT -->
+<div class="inputBox">
+<i class="bi bi-currency-rupee"></i>
+<input type="number" id="amount" placeholder="Enter amount">
+</div>
+
+<!-- SEND OTP -->
+<button onclick="sendOtp()">
+<i class="bi bi-shield-lock-fill"></i> Send OTP
+</button>
+
+<!-- OTP -->
+<div class="inputBox">
+<i class="bi bi-key-fill"></i>
+<input type="text" id="otp" placeholder="Enter OTP">
+</div>
+
+<!-- VERIFY -->
+<button onclick="verify()">
+<i class="bi bi-check-circle-fill"></i> Verify & Pay
+</button>
+
+<!-- BACK -->
+<button class="backBtn" onclick="goBack()">
+<i class="bi bi-arrow-left"></i> Back to Scan
+</button>
+
+<div id="msg"></div>
+</div>
+
+<script>
+
+// get receiver account from QR
+let params=new URLSearchParams(window.location.search);
+let acc=params.get("account");
+
+if(acc && acc.startsWith("ACCOUNT:")){
+acc=acc.replace("ACCOUNT:","");
+}
+document.getElementById("receiverAccount").value=acc;
+
+
+// show message
+function showMessage(text,type){
+let msg=document.getElementById("msg");
+msg.style.display="block";
+msg.innerHTML=text;
+msg.className="";
+msg.classList.add(type);
+}
+
+
+// ================= SEND OTP =================
+function sendOtp(){
+
+let userAcc=document.getElementById("userAccount").value.trim();
+let receiver=document.getElementById("receiverAccount").value.trim();
+let amount=document.getElementById("amount").value.trim();
+
+if(userAcc==""){
+showMessage('<i class="bi bi-exclamation-triangle-fill"></i> Enter your account number',"error");
+return;
+}
+
+if(amount=="" || amount<=0){
+showMessage('<i class="bi bi-exclamation-triangle-fill"></i> Enter valid amount',"error");
+return;
+}
+
+showMessage('<i class="bi bi-hourglass-split"></i> Sending OTP to your registered Gmail...', "info");
+
+fetch("http://localhost:8080/bank/sendscanOtp",{   // 🔥 FIXED URL
+method:"POST",
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+userAccount:userAcc,
+receiverAccount:receiver,
+amount:amount
+})
+})
+.then(res=>res.text())
+.then(d=>{
+if(d.includes("❌")){
+showMessage('<i class="bi bi-x-circle-fill"></i> '+d,"error");
+}else{
+showMessage('<i class="bi bi-check-circle-fill"></i> '+d,"success");
+}
+})
+.catch(err=>{
+showMessage('<i class="bi bi-x-circle-fill"></i> Server error',"error");
+});
+}
+
+
+// ================= VERIFY PAYMENT =================
+function verify(){
+
+let userAcc=document.getElementById("userAccount").value.trim();
+let receiver=document.getElementById("receiverAccount").value.trim();
+let amount=document.getElementById("amount").value.trim();
+let otp=document.getElementById("otp").value.trim();
+
+if(otp==""){
+showMessage('<i class="bi bi-exclamation-triangle-fill"></i> Enter OTP',"error");
+return;
+}
+
+showMessage('<i class="bi bi-hourglass-split"></i> Verifying payment...', "info");
+
+fetch("http://localhost:8080/bank/verifyscanOtp",{   // 🔥 FIXED URL
+method:"POST",
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+userAccount:userAcc,
+receiverAccount:receiver,
+amount:amount,
+otp:otp
+})
+})
+.then(res=>res.text())
+.then(d=>{
+if(d.toLowerCase().includes("success")){
+showMessage('<i class="bi bi-check-circle-fill"></i> '+d,"success");
+}else{
+showMessage('<i class="bi bi-x-circle-fill"></i> '+d,"error");
+}
+})
+.catch(err=>{
+showMessage('<i class="bi bi-x-circle-fill"></i> Server error',"error");
+});
+}
+
+function goBack(){
+window.location.href="scan.html";
+}
+</script>
+
+</body>
+</html>

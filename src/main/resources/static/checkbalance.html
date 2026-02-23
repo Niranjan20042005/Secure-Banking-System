@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check Balance</title>
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body{
+    background: linear-gradient(135deg,#020617,#020617,#071b2e);
+    font-family: 'Poppins', sans-serif;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+
+.card-box{
+    background:#0f172a;
+    padding:35px;
+    border-radius:18px;
+    width:380px;
+    box-shadow:0 0 25px cyan;
+    text-align:center;
+}
+
+.title{
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.form-control{
+    background:#020617;
+    border:1px solid cyan;
+    color:white;
+}
+
+.form-control:focus{
+    box-shadow:0 0 10px cyan;
+    border:1px solid cyan;
+    background:#020617;
+    color:white;
+}
+
+.btn-cyan{
+    background:cyan;
+    border:none;
+    font-weight:bold;
+}
+
+.btn-cyan:hover{
+    background:#00e5ff;
+}
+
+.msg{
+    margin-top:20px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.success{
+    color:#00ffd5;
+}
+
+.error{
+    color:#ff4d6d;
+}
+
+.back-btn{
+    margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card-box">
+
+    <h3 class="title">
+        <i class="bi bi-wallet2"></i> Check Balance
+    </h3>
+
+    <div class="form-group">
+        <input type="text" id="accno" class="form-control" placeholder="Enter Account Number">
+    </div>
+
+    <button class="btn btn-cyan w-100 mt-3" onclick="checkBalance()">
+        <i class="bi bi-search"></i> View Balance
+    </button>
+
+    <!-- MESSAGE AREA -->
+    <div id="msg" class="msg"></div>
+
+    <!-- BACK BUTTON -->
+    <button class="btn btn-outline-info w-100 back-btn" onclick="goBack()">
+        <i class="bi bi-arrow-left-circle"></i> Back to Dashboard
+    </button>
+
+</div>
+
+<script>
+
+function showMessage(text,type){
+    let m=document.getElementById("msg");
+    m.innerHTML=text;
+    m.className="msg "+type;
+}
+
+function checkBalance(){
+
+ let acc=document.getElementById("accno").value;
+
+ if(acc==""){
+   showMessage('<i class="bi bi-exclamation-triangle"></i> Enter account number',"error");
+   return;
+ }
+
+ showMessage('<i class="bi bi-hourglass-split"></i> Checking balance...',"success");
+
+ fetch("http://localhost:8080/bank/balance/"+acc)
+ .then(res=>res.json())
+ .then(data=>{
+
+   if(data.status=="success"){
+     showMessage(
+     '<i class="bi bi-check-circle"></i> Current Balance : ₹ '+data.balance,
+     "success");
+   }
+   else{
+     showMessage(
+     '<i class="bi bi-x-circle"></i> '+data.message,
+     "error");
+   }
+
+ })
+ .catch(()=>{
+   showMessage(
+   '<i class="bi bi-server"></i> Server error. Try again',
+   "error");
+ });
+
+}
+
+function goBack(){
+   window.location.href="dashboard.html"; // change if dashboard name different
+}
+
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background: radial-gradient(circle at top,#0f2a44,#020617 70%);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:0;
+}
+
+/* Card */
+.card{
+    background:#0b1220;
+    padding:40px 30px;
+    border-radius:20px;
+    width:380px;
+    text-align:center;
+    border:1px solid #00e5ff;
+    box-shadow:0 0 35px rgba(0,255,255,0.35);
+}
+
+/* Title */
+h2{
+    color:#00e5ff;
+    margin-bottom:25px;
+    font-weight:600;
+}
+
+/* Input box */
+.input-box{
+    position:relative;
+    margin-bottom:18px;
+}
+
+.input-box i{
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#00e5ff;
+}
+
+/* Input */
+input{
+    width:100%;
+    padding:13px 12px 13px 40px;
+    border-radius:12px;
+    border:none;
+    outline:none;
+    background:#020617;
+    color:#fff;
+    border:1px solid #00e5ff55;
+    font-size:14px;
+}
+
+input:focus{
+    border:1px solid #00e5ff;
+    box-shadow:0 0 10px #00e5ff;
+}
+
+input::placeholder{color:#aaa;}
+
+/* Buttons */
+button{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(90deg,#00f5a0,#00d9f5);
+    color:#000;
+    font-size:15px;
+    cursor:pointer;
+    margin-top:12px;
+    font-weight:600;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(0,255,255,0.5);
+}
+
+button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 25px cyan;
+}
+
+/* Back button */
+.back-btn{
+    background:#020617;
+    color:#fff;
+    border:1px solid #00e5ff;
+}
+
+.back-btn:hover{
+    background:#020617;
+    box-shadow:0 0 15px #00e5ff;
+}
+
+/* Message */
+.msg{
+    margin-top:15px;
+    font-weight:500;
+}
+.success{color:#00ffae;}
+.error{color:#ff4d6d;}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h2><i class="bi bi-shield-lock"></i> Account Login</h2>
+
+<div class="input-box">
+<i class="bi bi-envelope-fill"></i>
+<input type="email" id="email" placeholder="Enter Email">
+</div>
+
+<button onclick="sendOtp()">
+<i class="bi bi-send"></i> Send OTP
+</button>
+
+<div class="input-box">
+<i class="bi bi-key-fill"></i>
+<input type="text" id="otp" placeholder="Enter OTP">
+</div>
+
+<button onclick="verifyOtp()">
+<i class="bi bi-box-arrow-in-right"></i> Verify & Login
+</button>
+
+<div id="msg" class="msg"></div>
+
+<button class="back-btn" onclick="history.back()">
+<i class="bi bi-arrow-left"></i> Back
+</button>
+
+</div>
+
+<script>
+
+function show(text,type){
+ let m=document.getElementById("msg");
+ m.innerHTML=text;
+ m.className="msg "+type;
+}
+
+// ================= SEND OTP =================
+function sendOtp(){
+ let email=document.getElementById("email").value.trim();
+
+ if(email===""){
+   show("Enter email first","error");
+   return;
+ }
+
+ show("Sending OTP...","success");
+
+ fetch("http://localhost:8080/bank/sendDbOtp/"+email,{
+   method:"GET"
+ })
+ .then(res=>{
+    if(!res.ok){
+      throw new Error("Server error");
+    }
+    return res.json();   // expecting JSON
+ })
+ .then(data=>{
+    console.log("SEND OTP RESPONSE:",data);
+
+    if(data.status==="success"){
+       show("OTP sent to your Gmail 📩","success");
+    }else{
+       show(data.message || "Email not registered","error");
+    }
+ })
+ .catch(err=>{
+    console.log(err);
+    show("Server not responding ⚠️","error");
+ });
+}
+
+
+// ================= VERIFY OTP =================
+function verifyOtp(){
+ let email=document.getElementById("email").value.trim();
+ let otp=document.getElementById("otp").value.trim();
+
+ if(email==="" || otp===""){
+   show("Enter email & OTP","error");
+   return;
+ }
+
+ show("Verifying OTP...","success");
+
+ fetch("http://localhost:8080/bank/verifyDbOtp/"+email+"/"+otp,{
+   method:"GET"
+ })
+ .then(res=>{
+    if(!res.ok){
+      throw new Error("Server error");
+    }
+    return res.json();
+ })
+ .then(data=>{
+    console.log("VERIFY RESPONSE:",data);
+
+    if(data.status==="success"){
+       show("Login Success ✅","success");
+
+       localStorage.setItem("userEmail",email);
+
+       setTimeout(()=>{
+         window.location.href="myaccountdetails.html";
+       },800);
+
+    }else{
+       show("Wrong OTP ❌","error");
+    }
+ })
+ .catch(err=>{
+    console.log(err);
+    show("Server not responding ⚠️","error");
+ });
+}
+
+</script>
+
+
+</body>
+</html>
+
+
+

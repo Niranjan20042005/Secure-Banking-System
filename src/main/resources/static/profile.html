@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Create Profile</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#020617,#020617,#0f172a);
+color:white;
+}
+
+/* form box */
+.box{
+width:420px;
+padding:40px;
+border-radius:20px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(25px);
+border:1px solid cyan;
+box-shadow:0 0 40px rgba(0,255,255,0.3);
+}
+
+h2{
+text-align:center;
+color:cyan;
+margin-bottom:20px;
+text-shadow:0 0 15px cyan;
+}
+
+/* input group */
+.input-group{
+position:relative;
+margin-bottom:15px;
+}
+.input-group i{
+position:absolute;
+left:12px;
+top:14px;
+color:cyan;
+}
+input{
+width:100%;
+padding:12px 12px 12px 38px;
+border-radius:12px;
+border:none;
+outline:none;
+background:rgba(255,255,255,0.08);
+color:white;
+font-size:15px;
+}
+
+/* photo preview */
+.preview{
+display:flex;
+justify-content:center;
+margin-bottom:15px;
+}
+.preview img{
+width:110px;
+height:110px;
+border-radius:50%;
+border:3px solid cyan;
+object-fit:cover;
+box-shadow:0 0 15px cyan;
+}
+
+/* save button */
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+font-weight:600;
+cursor:pointer;
+background:linear-gradient(45deg,cyan,#00e5ff);
+box-shadow:0 0 20px cyan;
+margin-top:10px;
+font-size:16px;
+}
+
+/* back button */
+.back-btn{
+width:100%;
+padding:14px;
+margin-top:12px;
+border-radius:12px;
+border:1px solid cyan;
+background:rgba(255,255,255,0.05);
+color:cyan;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+box-shadow:0 0 15px rgba(0,255,255,0.2);
+}
+.back-btn:hover{
+background:linear-gradient(45deg,cyan,#00e5ff);
+color:black;
+transform:scale(1.05);
+box-shadow:0 0 25px cyan;
+}
+
+/* message */
+.msg{
+margin-top:15px;
+padding:12px;
+border-radius:10px;
+text-align:center;
+display:none;
+font-weight:600;
+}
+
+.success{
+background:rgba(0,255,150,0.15);
+border:1px solid #00ff95;
+color:#00ff95;
+}
+
+.error{
+background:rgba(255,0,0,0.15);
+border:1px solid red;
+color:#ff4d4d;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2><i class="bi bi-person-circle"></i> Create Profile</h2>
+
+<!-- photo preview -->
+<div class="preview">
+<img id="previewImg" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+</div>
+
+<!-- upload photo -->
+<div class="input-group">
+<i class="bi bi-image"></i>
+<input type="file" accept="image/*" onchange="loadPhoto(event)">
+</div>
+
+<div class="input-group">
+<i class="bi bi-person"></i>
+<input id="name" placeholder="Full Name">
+</div>
+
+<div class="input-group">
+<i class="bi bi-calendar"></i>
+<input id="age" placeholder="Age">
+</div>
+
+<div class="input-group">
+<i class="bi bi-telephone"></i>
+<input id="phone" placeholder="Phone">
+</div>
+
+<div class="input-group">
+<i class="bi bi-envelope"></i>
+<input id="email" placeholder="Email">
+</div>
+
+<div class="input-group">
+<i class="bi bi-geo-alt"></i>
+<input id="address" placeholder="Address">
+</div>
+
+<button onclick="saveProfile()">
+<i class="bi bi-shield-check"></i> Save Profile
+</button>
+
+<button class="back-btn" onclick="goDashboard()">
+<i class="bi bi-arrow-left-circle-fill"></i> Back to Dashboard
+</button>
+
+<div id="msgBox" class="msg"></div>
+
+</div>
+
+<script>
+let username = localStorage.getItem("username");
+let token = localStorage.getItem("token");
+let photoBase64="";
+
+// LOAD PHOTO
+function loadPhoto(event){
+let file=event.target.files[0];
+let reader=new FileReader();
+reader.onload=function(){
+photoBase64=reader.result;
+document.getElementById("previewImg").src=photoBase64;
+}
+reader.readAsDataURL(file);
+}
+
+// SHOW MESSAGE WITH ICONS
+function showMessage(text,type){
+let box=document.getElementById("msgBox");
+box.style.display="block";
+box.className="msg "+type;
+box.innerHTML=text;
+}
+
+// AUTO LOAD PROFILE
+window.onload = ()=>{
+fetch("http://localhost:8080/profile/get/"+username,{
+headers:{Authorization:"Bearer "+token}
+})
+.then(res=>res.json())
+.then(p=>{
+if(!p) return;
+
+document.getElementById("name").value=p.name||"";
+document.getElementById("age").value=p.age||"";
+document.getElementById("phone").value=p.phone||"";
+document.getElementById("email").value=p.email||"";
+document.getElementById("address").value=p.address||"";
+
+if(p.photo){
+photoBase64=p.photo;
+document.getElementById("previewImg").src=p.photo;
+}
+});
+}
+
+// SAVE PROFILE
+function saveProfile(){
+
+let name=document.getElementById("name").value;
+let age=document.getElementById("age").value;
+let phone=document.getElementById("phone").value;
+let email=document.getElementById("email").value;
+let address=document.getElementById("address").value;
+
+if(name==""||age==""||phone==""||email==""||address==""){
+showMessage('<i class="bi bi-exclamation-triangle-fill"></i> Please fill all details',"error");
+return;
+}
+
+let data={
+username:username,
+name:name,
+age:age,
+phone:phone,
+email:email,
+address:address,
+photo:photoBase64
+};
+
+fetch("http://localhost:8080/profile/save",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
+body:JSON.stringify(data)
+})
+.then(res=>res.json())
+.then(d=>{
+showMessage('<i class="bi bi-check-circle-fill"></i> Profile Saved Successfully',"success");
+setTimeout(()=>{location="dashboard.html";},1500);
+});
+}
+
+function goDashboard(){
+location="dashboard.html";
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+

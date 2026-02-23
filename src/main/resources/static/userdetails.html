@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin - User Details</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    background:#071a2f;
+    font-family:Arial;
+    color:white;
+}
+
+/* top bar */
+.topbar{
+    background:#0d2038;
+    padding:18px;
+    font-size:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 0 15px cyan;
+}
+
+.backbtn{
+    background:linear-gradient(45deg,cyan,#00ffd5);
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.container{
+    width:750px;
+    margin:40px auto;
+    background:#13233a;
+    padding:35px;
+    border-radius:18px;
+    box-shadow:0 0 35px cyan;
+}
+
+.searchbox{
+    text-align:center;
+}
+
+input{
+    width:70%;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    margin:10px;
+}
+
+button.search{
+    padding:13px 30px;
+    background:linear-gradient(45deg,cyan,#00ffd5);
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.card{
+    background:#0d2038;
+    padding:20px;
+    border-radius:15px;
+    margin-top:20px;
+    box-shadow:0 0 15px cyan;
+}
+
+h3{
+    color:cyan;
+}
+
+table{
+    width:100%;
+    margin-top:15px;
+    border-collapse:collapse;
+}
+
+th{
+    background:#071a2f;
+    color:cyan;
+    font-size:16px;
+}
+
+td,th{
+    padding:12px;
+    border:1px solid cyan;
+    text-align:center;
+}
+
+tr:hover{
+    background:#0d2038;
+}
+
+.amount{
+    font-weight:bold;
+    color:#00ffae;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+   <div><i class="bi bi-bank"></i> Secure Bank - Admin User Details</div>
+   <button class="backbtn" onclick="goBack()">
+      <i class="bi bi-arrow-left"></i> Back
+   </button>
+</div>
+
+<div class="container">
+
+<div class="searchbox">
+<h2><i class="bi bi-search"></i> Search User by Gmail</h2>
+
+<input type="text" id="email" placeholder="Enter User Gmail">
+<br>
+<button class="search" onclick="getDetails()">
+<i class="bi bi-search"></i> Search User
+</button>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+function goBack(){
+    window.location.href="admin.html";
+}
+
+function getDetails(){
+
+    let email = document.getElementById("email").value;
+
+    fetch("http://localhost:8080/bank/admin/user/" + email)
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.status==="fail"){
+            alert("User not found");
+            return;
+        }
+
+        let html = `
+
+        <div class="card">
+        <h3><i class="bi bi-person-circle"></i> User Profile</h3>
+        <table>
+        <tr><th><i class="bi bi-person"></i> Name</th><td>${data.name}</td></tr>
+        <tr><th><i class="bi bi-envelope"></i> Email</th><td>${data.email}</td></tr>
+        </table>
+        </div>
+
+        <div class="card">
+        <h3><i class="bi bi-credit-card-2-front"></i> Account Details</h3>
+        <table>
+        <tr><th>Account Number</th><td>${data.accountNo}</td></tr>
+        <tr>
+        <th><i class="bi bi-cash-stack"></i> Balance</th>
+        <td class="amount"><i class="bi bi-currency-rupee"></i> ${data.balance}</td>
+        </tr>
+        </table>
+        </div>
+
+        <div class="card">
+        <h3><i class="bi bi-clock-history"></i> Transaction History</h3>
+        <table>
+        <tr>
+        <th><i class="bi bi-arrow-left-right"></i> Type</th>
+        <th><i class="bi bi-currency-rupee"></i> Amount</th>
+        <th><i class="bi bi-calendar"></i> Date</th>
+        </tr>
+        `;
+
+        data.transactions.forEach(t=>{
+
+            let icon="bi-arrow-left-right";
+
+            if(t.type==="DEBIT" || t.type==="TRANSFER")
+                icon="bi-arrow-up-circle text-danger";
+            else if(t.type==="CREDIT")
+                icon="bi-arrow-down-circle text-success";
+
+            html += `
+            <tr>
+            <td><i class="bi ${icon}"></i> ${t.type}</td>
+            <td class="amount"><i class="bi bi-currency-rupee"></i> ${t.amount}</td>
+            <td><i class="bi bi-calendar-event"></i> ${t.date}</td>
+            </tr>`;
+        });
+
+        html += "</table></div>";
+
+        document.getElementById("result").innerHTML = html;
+
+    })
+    .catch(()=>{
+        alert("Server error or user not found");
+    });
+}
+</script>
+
+</body>
+</html>

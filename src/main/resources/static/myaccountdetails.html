@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>My Account</title>
+
+<!-- IMPORTANT FOR ₹ SYMBOL -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins;
+}
+
+body{
+min-height:100vh;
+background:linear-gradient(135deg,#020617,#020617,#020617,#071b2e);
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+overflow:auto;
+padding:40px 0;
+}
+
+/* main box */
+.box{
+width:480px;
+max-width:95%;
+padding:35px;
+border-radius:25px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border:1px solid rgba(0,255,149,0.4);
+box-shadow:0 0 40px rgba(0,255,149,0.3);
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+color:#00ff95;
+}
+
+/* details */
+.details{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+
+.details p{
+background:rgba(255,255,255,0.05);
+padding:12px;
+border-radius:12px;
+font-size:14px;
+border:1px solid rgba(255,255,255,0.08);
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
+word-break:break-word;
+}
+
+.details i{
+color:#00ff95;
+}
+
+/* balance */
+.balance{
+margin-top:15px;
+background:#00ff9522;
+padding:14px;
+border-radius:12px;
+text-align:center;
+font-size:22px;
+border:1px solid #00ff95;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
+}
+
+/* card */
+.card{
+margin-top:25px;
+padding:25px;
+border-radius:20px;
+background:linear-gradient(135deg,#0a2a66,#1e4ed8,#00c3ff);
+box-shadow:0 0 30px #00ff9566;
+}
+
+.card-number{
+font-size:26px;
+margin:20px 0;
+letter-spacing:3px;
+font-weight:700;
+}
+
+button{
+margin-top:25px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(45deg,#00ff95,#00c3ff);
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2><i class="bi bi-bank"></i> Secure Bank Account</h2>
+
+<div class="details">
+<p><i class="bi bi-person"></i><b>Name:</b> <span id="name">Loading...</span></p>
+<p><i class="bi bi-envelope"></i><b>Email:</b> <span id="email">Loading...</span></p>
+<p><i class="bi bi-credit-card"></i><b>Account:</b> <span id="acc">Loading...</span></p>
+<p><i class="bi bi-building"></i><b>IFSC:</b> <span id="ifsc">Loading...</span></p>
+<p><i class="bi bi-person-badge"></i><b>Customer ID:</b> <span id="cid">Loading...</span></p>
+<p><i class="bi bi-wallet2"></i><b>Type:</b> <span id="type">Loading...</span></p>
+</div>
+
+<div class="balance">
+<i class="bi bi-cash-stack"></i>
+Balance: ₹<span id="bal">Loading...</span>
+</div>
+
+<div class="card">
+<h3><i class="bi bi-shield-lock"></i> SECURE BANK</h3>
+<div class="card-number" id="cardNumber">XXXX XXXX</div>
+<div id="cardName">NAME</div>
+</div>
+
+<button onclick="location='dashboard.html'">
+<i class="bi bi-arrow-left-circle"></i> Back Dashboard
+</button>
+</div>
+
+<script>
+window.onload=function(){
+
+let email = localStorage.getItem("userEmail");
+
+if(!email){
+alert("Login first");
+window.location.href="accountlogin.html";
+return;
+}
+
+fetch("http://localhost:8080/bank/myaccount/"+email)
+.then(res=>res.json())
+.then(data=>{
+
+if(data.status!="success"){
+alert("Account not found");
+return;
+}
+
+document.getElementById("name").innerText = data.name;
+document.getElementById("email").innerText = data.email;
+document.getElementById("acc").innerText = data.accountNo;
+document.getElementById("ifsc").innerText = data.ifsc;
+document.getElementById("cid").innerText = data.customerId;
+document.getElementById("type").innerText = data.type;
+document.getElementById("bal").innerText = data.balance;
+
+document.getElementById("cardName").innerText = data.name;
+document.getElementById("cardNumber").innerText = data.accountNo;
+
+})
+.catch(()=>{
+alert("⚠ Backend not started");
+});
+}
+</script>
+
+</body>
+</html>
+
+
