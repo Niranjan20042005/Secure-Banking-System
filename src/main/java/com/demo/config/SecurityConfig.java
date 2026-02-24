@@ -22,21 +22,25 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                        "/send-qr-otp",
-                        "/verify-qr-otp",
-                        "/transfer",
-                        "/auth/**",
-                        "/profile/**",
-                        "/admin/**",
-                        "/bank/**",
-                        "/*.html",
-                        "/css/**",
-                        "/js/**",
-                        "/images/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
+            	    .requestMatchers(
+            	            "/",              // ✅ allow root
+            	            "/index.html",    // ✅ allow homepage
+            	            "/login",
+            	            "/register",
+            	            "/send-qr-otp",
+            	            "/verify-qr-otp",
+            	            "/transfer",
+            	            "/auth/**",
+            	            "/profile/**",
+            	            "/admin/**",
+            	            "/bank/**",
+            	            "/*.html",
+            	            "/css/**",
+            	            "/js/**",
+            	            "/images/**"
+            	    ).permitAll()
+            	    .anyRequest().authenticated()
+            	)
 
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());
