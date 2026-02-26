@@ -156,13 +156,28 @@ public class BankController {
         String otp = String.valueOf(new Random().nextInt(900000)+100000);
         otpStore.put(email, otp);
 
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo(email);
-        msg.setSubject("Your Bank OTP");
-        msg.setText("Your OTP is: "+otp);
-        mailSender.send(msg);
+        System.out.println("========== DEBUG START ==========");
+        System.out.println("Sending OTP to: " + email);
+        System.out.println("Generated OTP: " + otp);
 
-        System.out.println("OTP = "+otp);
+        try{
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("Your Bank OTP");
+            msg.setText("Your OTP is: "+otp);
+
+            mailSender.send(msg);
+
+            System.out.println("✅ MAIL SENT SUCCESSFULLY");
+
+        }catch(Exception e){
+
+            System.out.println("❌ MAIL FAILED");
+            e.printStackTrace();              // 🔥 VERY IMPORTANT
+            System.out.println("ERROR MSG: " + e.getMessage());
+        }
+
+        System.out.println("========== DEBUG END ==========");
 
         return "OTP SENT";
     }
